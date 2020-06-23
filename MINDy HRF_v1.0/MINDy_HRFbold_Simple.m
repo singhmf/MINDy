@@ -15,7 +15,7 @@ if nargin==2
     disp('By default: no smoothing (smoothing is recommended for short TRs)')
 end
 Pre.TR=TR;
-ParRes=30;
+ParRes=20;
 ParStr.H1Rate=10;ParStr.H2Rate=1;ParStr.H2min=.5;ParStr.H2max=1.5;
 %% BatchSz determines the number of sequential time points selected on each iteration--
 %% and is limited by the shortest scanning run
