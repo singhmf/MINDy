@@ -1,40 +1,44 @@
 function[Out,HRF,W,D,DeconvDat]=MINDy_HRFbold_Simple(X,TR,doSmooth)
 %% X is data: cell array of scans: region x time
-%% TR is the TR in seconds: Default =.72s
-%% doSmooth indicates whether to do additional smoothing; Default='n'
-
-%% Outputs:
-%% Out=MINDy model output structure
-%% HRF=function handle that produces the HRFs for all nodes evaluated at user-selected input times
-%%      input arguments are 1xtime(s) and outputs are region x time
-%% W and D give the weight and decay parameters
-%% DeconvDat gives the deconvolved data.
+%% TR is the TR in seconds
+%% doSmooth indicates whether to do additional smoothing ([.5 .5] kernel)
 
 ChosenPARSTR_HRF;
 if nargin==1
     TR=.72;
     doSmooth='n';
-    disp('Assuming HCP TR: 720ms')
+    disp('By default: TR=.72s and no smoothing (smoothing is recommended for this TR)')
 end
 
 if nargin==2
-    doSmooth='n';
-    disp('Assuming no additional smoothing')
+    doSmooth='n';    
+    disp('By default: no smoothing (smoothing is recommended for short TRs)')
 end
 Pre.TR=TR;
-ParRes=10;
+ParRes=30;
 ParStr.H1Rate=10;ParStr.H2Rate=1;ParStr.H2min=.5;ParStr.H2max=1.5;
-ParStr.BatchSz=250;
+%% BatchSz determines the number of sequential time points selected on each iteration--
+%% and is limited by the shortest scanning run
+ParStr.BatchSz=100;
+%% NBatch determines the number of iterations
 ParStr.NBatch=6000;
-ConvBase=Pre.ConvLevel;
+%% The Weiner Noise-to-Signal Ratio (you may need to tweak this depending upon your scanner)
 Pre.ConvLevel=.002;
+ConvBase=Pre.ConvLevel;
+
 
 
 if ~iscell(X)
     X={X};
 end
 
-tHRF=30;
+%% Rescale dimensions of low-rank component proportionately to the number of parcels
+nX=size(X{1},1);
+%% 419 parcels in the original MINDy papers
+ParStr.wPC=ceil(ParStr.wPC*nX/419);
+
+%% HRF kernel length in seconds
+tHRF=20;
 
 %% Canonical HRF to calculate rescaling
 a1=6;
@@ -52,10 +56,10 @@ HX0=cell(1,numel(X));
 BadFrames=cell(1,numel(X));
 
 %% Calculate change in SD under deconvolution in order to rescale priors.
-%%  i.e. rescale the problem so that original hyperparameters will work
+%%  i.e. rescale the original hyperparameters to the HRF model
 
 for ii=1:numel(X)
-    [tmp,BadFrames{ii}]=MyRestingPreProcInterpNoHRF(X{ii}(:,3:(end-3)),Pre.FiltAmp,Pre.ConvLevel,Pre.DownSamp,Pre.TR,'n');
+    [tmp,BadFrames{ii}]=MyRestingPreProcInterpNoHRF(X{ii},Pre.FiltAmp,Pre.ConvLevel,Pre.DownSamp,Pre.TR,'n');
     if strcmpi(doSmooth(1),'y')
     X{ii}=zscore(convn(tmp{1},[1 1]/2,'valid')')';
     else
@@ -66,7 +70,6 @@ for ii=1:numel(X)
     Dtmp=MINDy_DeconvHRF(X{ii},Pre.TR,ConvBase,ceil(tHRF/Pre.TR));
     HdX0{ii}=convn(zscore(Dtmp')',[1 -1],'valid');
     HX0{ii}=zscore(Dtmp(:,1:(end-1))')';
-   % hSD{ii}=std(tmp,[],2);
 end
 
 %% Default parameters for transfer fun:
@@ -80,14 +83,12 @@ deconvSD=std([HdX0{:}]-mean([HX0{:}].*[HdX0{:}],2).*[HX0{:}],[],2);
     %% =psi(zscore(deconv(x,h)))
 deconvPsi=std(defPsi([HX0{:}]),[],2);
 
-
 %% Estimate rescaling needed to use original MINDy parameters for BOLD model fitting
 ReScale=median((deconvPsi.*boldSD)./(boldPsi.*deconvSD));
 
 %% For non-HCP data, recommended to also factor in different TR (scale relative to HCP 720ms)
 ReScale=ReScale*TR/.72;
-%Out=MINDy_HRFbold_Rescale(Uncellfun(@single,X),Pre,ParStr,10,2);
-Out=MINDy_HRFbold_Rescale(Uncellfun(@single,X),Pre,ParStr,ParRes,ReScale);
+Out=MINDy_HRFbold_OrigX(X,Pre,ParStr,ParRes,ReScale,20,20,20);
 Out.ReScale=ReScale;
 HRF=MINDy_MakeHRF_H1H2(Out.HRF{1},Out.HRF{2});
 
