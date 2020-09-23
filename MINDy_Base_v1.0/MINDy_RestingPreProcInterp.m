@@ -1,4 +1,5 @@
 function [Y,BadFrames] = MINDy_RestingPreProcInterp(XDat,FiltAmp,ConvLevel,DownSamp,TR,varargin)
+%% Pre-Process Data
 
 if isempty(varargin)
     tLength=30;

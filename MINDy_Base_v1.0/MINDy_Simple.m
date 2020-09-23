@@ -1,4 +1,4 @@
-function[Out,Wfin,Dfin]=MINDy_Simple(Dat,isDnSampDeriv,varargin)
+function[Out,Wfin,Dfin]=MINDy_Simple(Dat,TR,isDnSampDeriv,varargin)
 %% Just Input Data as region x time (a single matrix or cell of matrices)
 %% IsDnSampDeriv denotes whether to take the one step derivative ('n') or...
 %% 2-step derivative: x(t+2)-x(t)/2 ('y'/default)
@@ -21,8 +21,7 @@ end
 ChosenPARSTR;
 ParStr.BatchSz=300;ParStr.NBatch=5000;
 doRobust='n';
-%% If you are using a different TR insert it here (in seconds) as:
-%% Pre.TR=(your TR)
+Pre.TR=TR;
 
 ParStr.H1min=5;ParStr.H1max=7;ParStr.H2min=.7;ParStr.H2max=1.3;ParStr.H1Rate=.1;ParStr.H2Rate=.1;
 ParStr.L2SpPlsEN=0;
