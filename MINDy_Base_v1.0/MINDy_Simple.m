@@ -2,7 +2,7 @@ function[Out,Wfin,Dfin]=MINDy_Simple(Dat,TR,isDnSampDeriv,varargin)
 %% Just Input Data as region x time (a single matrix or cell of matrices)
 %% IsDnSampDeriv denotes whether to take the one step derivative ('n') or...
 %% 2-step derivative: x(t+2)-x(t)/2 ('y'/default)
-
+%% varargin denotes whether to do preprocessing (filter and deconvolution) ('y' is default)
 if isempty(isDnSampDeriv)
     isDnSampDeriv='y';
 end
@@ -32,6 +32,12 @@ end
 for i=1:numel(Dat)
 Dat{i}=Dat{i}(:,~isnan(sum(Dat{i},1)));
 end
+
+
+%% Rescale dimensions of low-rank component proportionately to the number of parcels
+nX=size(Dat{1},1);
+%% 419 parcels in the original MINDy papers
+ParStr.wPC=ceil(ParStr.wPC*nX/419);
 
 
 Dat=cellfun(@(xx)(zscore(xx')'),Dat,'UniformOutput',0);
