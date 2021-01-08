@@ -5,7 +5,7 @@ function[Out,Pred,Resid,R2]=MINDy_HRF_CV(Dat1,Dat2,TR,varargin)
 %% varargin is {ParStr,Pre}
 
 ChosenPARSTR_HRF;
-ParStr.NBatch=5000;ParStr.BatchSz=500;
+ParStr.NBatch=15000;ParStr.BatchSz=500;
 Pre.TR=TR;
 %% Number of Parcels
 if ~iscell(Dat1)
@@ -19,6 +19,7 @@ if ~isempty(varargin)
 else    
 %% Naive rescaling of hyperparameters based upon parcel size
 ParStr=MINDy_Naive_Hyper_Scale(nX,ParStr);
+
 end
 if numel(varargin)>1
    Pre=varargin{2};

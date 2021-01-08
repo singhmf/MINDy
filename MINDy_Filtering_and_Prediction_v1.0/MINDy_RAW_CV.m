@@ -4,7 +4,7 @@ function[Out,Pred,Resid,R2]=MINDy_RAW_CV(Dat1,Dat2,varargin)
 %% varargin is {ParStr,Pre}
 
 ChosenPARSTR_HRF;
-ParStr.NBatch=5000;ParStr.BatchSz=500;
+ParStr.NBatch=15000;ParStr.BatchSz=500;
 %% Number of Parcels
 if ~iscell(Dat1)
     nX=size(Dat1,1);

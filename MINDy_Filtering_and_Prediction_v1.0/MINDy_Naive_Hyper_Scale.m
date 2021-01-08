@@ -15,7 +15,6 @@ else
 end
 %% Original MINDy paper used Schaefer 400 + 19 subcorticals
 SizeRatio=nX/419;
-ParStr.Dstart=max(.4,min(1,SizeRatio)*ParStr.Dstart);
 %% Low rank dimension (scales with n)
 ParStr.wPC=ceil(ParStr.wPC*SizeRatio);
 %% L1 sparse components (scales with n)
